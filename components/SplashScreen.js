@@ -11,7 +11,7 @@ export default function SplashScreen() {
 
     useEffect(() => {
         const timeout = setTimeout(() => {
-          navigation.navigate('Home', { animation: 'fade' });
+          navigation.navigate('Login', { animation: 'fade' });
         }, 10000);
     
         return () => clearTimeout(timeout);
