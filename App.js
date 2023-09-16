@@ -1,13 +1,15 @@
 import React, { useState, createContext, useContext, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator,TransitionPresets } from '@react-navigation/stack';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator ,LogBox } from 'react-native';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './config/firebase';
 import Login from './components/Login';
 import Signup from './components/SignUp';
 import SplashScreen from './components/SplashScreen';
 import Home from './components/Home';
+
+LogBox.ignoreLogs(['@firebase/auth']);
 
 const Stack = createStackNavigator();
 const AuthenticatedUserContext = createContext({});
@@ -23,7 +25,8 @@ return (
 
 function ChatStack() {
   return (
-    <Stack.Navigator defaultScreenOptions={Home}>
+    <Stack.Navigator screenOptions={{
+      headerShown: false,}}>
       <Stack.Screen name='Home' component={Home} />
     </Stack.Navigator>
   );
@@ -45,8 +48,10 @@ function AuthStack() {
 
 
 function RootNavigator() {
+
   const { user, setUser } = useContext(AuthenticatedUserContext);
   const [isLoading, setIsLoading] = useState(true);
+
 useEffect(() => {
     // onAuthStateChanged returns an unsubscriber
     const unsubscribeAuth = onAuthStateChanged(
@@ -62,6 +67,7 @@ useEffect(() => {
 // unsubscribe auth listener on unmount
     return unsubscribeAuth;
   }, [user]);
+
 if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>

@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View ,Image} from "react-native";
+import { StyleSheet, Text, View ,Image,Alert} from "react-native";
 import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { createStackNavigator, TransitionPresets } from '@react-navigation/stack';
@@ -14,11 +14,40 @@ import Camera from "./Camera";
 import User from "../assets/user3.jpg"
 import Dashboard from "./Dashboard";
 
+import { signOut } from 'firebase/auth';
+import { auth, database } from '../config/firebase';
+
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
 
 
 export default function Home() {
+
+  // Function to be called when the user clicks 'Logout'
+  function handleLogout() {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to logout?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        { 
+          text: "OK", 
+          onPress: () => {
+            signOut(auth).catch(error => console.log('Error logging out: ', error));
+          }
+        }
+      ]
+    );
+  }
+
+  // Dummy screen component
+  function LogoutScreen() {
+    return <View />;
+  }
+
 
   return (
     <Drawer.Navigator
@@ -103,11 +132,25 @@ export default function Home() {
           }}
           component={Camera}
         />
+
+      <Drawer.Screen
+          name="Logout"
+          component={LogoutScreen}
+          options={{
+            drawerLabel: "Logout",
+            title: "Logout",
+            drawerIcon: () => (
+              <SimpleLineIcons name="logout" size={20} color="#808080" />
+            )
+          }}
+          listeners={{
+            focus: handleLogout,
+          }}
+        />
+       
         
       </Drawer.Navigator>
   );
-
-  
 
 }
 
