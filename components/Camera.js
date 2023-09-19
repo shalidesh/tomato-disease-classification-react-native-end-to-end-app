@@ -18,9 +18,12 @@ import CameraImage from "../assets/camera.png";
 import Gallery from "../assets/gallery.png";
 import Clear from "../assets/clear.png";
 
+
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { Camera } from 'expo-camera';
+import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
+
 
 export const {height, width} = Dimensions.get('window');
 
@@ -47,7 +50,7 @@ const options = {
 const BACKEND_URL = 'http://192.168.8.196:3000/predict'
 
 
-export default function Camera() {
+export default function CameraPage() {
 
     const [result, setResult] = useState('');
     const [label, setLabel] = useState('');
@@ -61,6 +64,31 @@ export default function Camera() {
     const backgroundStyle = {
         backgroundColor: isDarkMode ? '#0c1a30' : '#0c1a30',
     };
+
+    const openCamera = async () => {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status === 'granted') {
+          let result = await ImagePicker.launchCameraAsync({
+              allowsEditing: true,
+              aspect: [4, 4],
+              quality: 1,
+          });
+  
+          console.log(result);
+  
+          if (!result.cancelled) {
+            const path = result.assets[0].uri;
+            getResult(path, result);
+          }
+      } else {
+          console.log('Camera permission not granted');
+      }
+  };
+
+  const clearOutput = () => {
+    setResult('');
+    setImage('');
+  };
 
     
     const getResult = async (path, response) => {
@@ -123,7 +151,7 @@ export default function Camera() {
           style={{height: height, width: width}}
         />
         <Text style={styles.title}>{'Tomato Disease \nPrediction App'}</Text>
-        <TouchableOpacity onPress={console.log("clear")} style={styles.clearStyle}>
+        <TouchableOpacity onPress={clearOutput} style={styles.clearStyle}>
           <Image source={Clear} style={styles.clearImage} />
         </TouchableOpacity>
         {(image?.length && (
@@ -152,7 +180,7 @@ export default function Camera() {
         <View style={styles.btn}>
           <TouchableOpacity
             activeOpacity={0.9}
-            onPress={() =>manageCamera('Photo')}
+            onPress={openCamera}
             style={styles.btnStyle}>
             <Image source={CameraImage} style={styles.imageIcon} />
           </TouchableOpacity>
