@@ -10,7 +10,7 @@ import {
 } from "@expo/vector-icons";
 import { DrawerItemList, createDrawerNavigator } from "@react-navigation/drawer";
 
-import Camera from "./Camera";
+import CameraPage from "./Camera";
 import User from "../assets/user3.jpg"
 import Dashboard from "./Dashboard";
 
@@ -143,7 +143,7 @@ export default function Home() {
               <SimpleLineIcons name="home" size={20} color="#808080" />
             )
           }}
-          component={Camera}
+          component={CameraPage}
         />
 
       <Drawer.Screen
