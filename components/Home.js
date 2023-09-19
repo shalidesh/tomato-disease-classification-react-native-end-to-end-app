@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View ,Image,Alert} from "react-native";
-import React from "react";
+import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { createStackNavigator, TransitionPresets } from '@react-navigation/stack';
 import {
@@ -22,6 +22,19 @@ const Drawer = createDrawerNavigator();
 
 
 export default function Home() {
+
+  const [user, setUser] = useState("");
+
+
+  useEffect(() => {
+
+    const user = auth.currentUser;
+    setUser(user);
+    console.log(user.uid);      // prints the user's unique ID
+    console.log(user.email);    // prints the user's email address
+
+
+}, []);
 
   // Function to be called when the user clicks 'Logout'
   function handleLogout() {
@@ -80,13 +93,13 @@ export default function Home() {
                       fontWeight: "bold",
                       color: "#111"
                     }}
-                  >User Name</Text>
+                  >{user.email}</Text>
                   <Text
                     style={{
                       fontSize: 16,
                       color: "#111"
                     }}
-                  >User description</Text>
+                  >{user.uid}</Text>
                 </View>
                 <DrawerItemList {...props} />
               </>

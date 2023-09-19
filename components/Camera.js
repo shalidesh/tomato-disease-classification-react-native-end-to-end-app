@@ -18,9 +18,9 @@ import CameraImage from "../assets/camera.png";
 import Gallery from "../assets/gallery.png";
 import Clear from "../assets/clear.png";
 
-import axios from 'axios';
-import Config from 'react-native-config';
-import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
+import { Camera } from 'expo-camera';
 
 export const {height, width} = Dimensions.get('window');
 
@@ -44,6 +44,8 @@ const options = {
   includeBase64: true,
 };
 
+const BACKEND_URL = 'http://192.168.8.196:3000/predict'
+
 
 export default function Camera() {
 
@@ -51,8 +53,64 @@ export default function Camera() {
     const [label, setLabel] = useState('');
     const isDarkMode = useColorScheme() === 'dark';
     const [image, setImage] = useState('');
+
+    const [hasPermission, setHasPermission] = useState(null);
+    const [type, setType] = useState(Camera.Constants.Type.back);
+    const [cameraRef, setCameraRef] = useState(null);
+
     const backgroundStyle = {
         backgroundColor: isDarkMode ? '#0c1a30' : '#0c1a30',
+    };
+
+    
+    const getResult = async (path, response) => {
+      setImage(path);
+      setLabel('Predicting...');
+      setResult('');
+
+        // Read the file as a base64 string
+      const imageBase64 = await FileSystem.readAsStringAsync(path, { encoding: FileSystem.EncodingType.Base64 });
+        
+        // Make a POST request to your backend
+      fetch(BACKEND_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            image: imageBase64,
+        }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            setLabel(data.class);
+            setResult(data.confidence);
+        })
+        .catch(error => {
+            console.log('Error:', error);
+            setLabel('Failed to predicting.');
+        });
+  
+    };
+
+
+    const openLibrary = async () => {
+      // No permissions request is necessary for launching the image library
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.All,
+        allowsEditing: true,
+        aspect: [4, 4],
+        quality: 1,
+      });
+
+      console.log(result);
+
+      if (!result.canceled) {
+        const path = result.assets[0].uri;
+        getResult(path, result);
+        
+      }
     };
 
 
@@ -65,7 +123,7 @@ export default function Camera() {
           style={{height: height, width: width}}
         />
         <Text style={styles.title}>{'Tomato Disease \nPrediction App'}</Text>
-        <TouchableOpacity onPress={console.log("called")} style={styles.clearStyle}>
+        <TouchableOpacity onPress={console.log("clear")} style={styles.clearStyle}>
           <Image source={Clear} style={styles.clearImage} />
         </TouchableOpacity>
         {(image?.length && (
@@ -100,7 +158,7 @@ export default function Camera() {
           </TouchableOpacity>
           <TouchableOpacity
             activeOpacity={0.9}
-            onPress={() => manageCamera('Photo')}clearOutput
+            onPress={openLibrary}clearOutput
             style={styles.btnStyle}>
             <Image source={Gallery} style={styles.imageIcon} />
           </TouchableOpacity>
@@ -160,7 +218,7 @@ const styles = StyleSheet.create({
       tintColor: '#FFF',
       zIndex: 10,
     },
-    space: {marginVertical: 10, marginHorizontal: 10},
+    space: {marginVertical: 0, marginHorizontal: 10},
     labelText: {color: '#FFF', fontSize: 20, },
     resultText: {fontSize: 32, },
     imageIcon: {height: 60, width: 60},
