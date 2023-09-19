@@ -9,6 +9,7 @@ import {
     ContributionGraph,
     StackedBarChart
   } from "react-native-chart-kit";
+import { auth } from "../config/firebase";
 
 export default function Dashboard() {
 
@@ -16,12 +17,12 @@ export default function Dashboard() {
     const screenWidth = Dimensions.get("window").width;
 
     const data = {
-        labels: ["January", "February", "March", "April", "May", "June"],
+        labels: ["January", "February", "March", "April"],
         datasets: [
           {
-            data: [20, 45, 28, 80, 99, 43],
+            data: [20, 45, 28, 80],
             color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`, // optional
-            strokeWidth: 2 // optional
+            strokeWidth: 3 // optional
           }
         ],
         legend: ["Rainy Days"] // optional
@@ -31,38 +32,38 @@ export default function Dashboard() {
       const data1 = [
         {
           name: "Seoul",
-          population: 21500000,
+          population: 21500,
           color: "rgba(131, 167, 234, 1)",
-          legendFontColor: "#7F7F7F",
-          legendFontSize: 15
+          legendFontColor: "#000000",
+          legendFontSize: 10
         },
         {
           name: "Toronto",
-          population: 2800000,
+          population: 2800,
           color: "#F00",
-          legendFontColor: "#7F7F7F",
-          legendFontSize: 15
+          legendFontColor: "#000000",
+          legendFontSize: 10
         },
         {
           name: "Beijing",
-          population: 527612,
+          population: 5276,
           color: "red",
-          legendFontColor: "#7F7F7F",
-          legendFontSize: 15
+          legendFontColor: "#000000",
+          legendFontSize: 10
         },
         {
           name: "New York",
-          population: 8538000,
+          population: 8538,
           color: "#ffffff",
-          legendFontColor: "#7F7F7F",
-          legendFontSize: 15
+          legendFontColor: "#000000",
+          legendFontSize: 10
         },
         {
           name: "Moscow",
-          population: 11920000,
+          population: 11920,
           color: "rgb(0, 0, 255)",
-          legendFontColor: "#7F7F7F",
-          legendFontSize: 15
+          legendFontColor: "#000000",
+          legendFontSize: 10
         }
       ];
 
@@ -89,7 +90,7 @@ export default function Dashboard() {
         { date: "2017-02-30", count: 4 }
       ];
 
-    const chartConfig = {
+      const chartConfig = {
         backgroundGradientFrom: "#1E2923",
         backgroundGradientFromOpacity: 0,
         backgroundGradientTo: "#08130D",
@@ -100,57 +101,60 @@ export default function Dashboard() {
         useShadowColorFromDataset: false // optional
       };
 
-    return(
-        <ScrollView>
-            <View>
-            <Text>Bezier Line Chart</Text>
-            <LineChart
-                data={data}
-                width={screenWidth}
-                height={220}
-                chartConfig={chartConfig}
-                />
-            
-            <LineChart
-                data={data}
-                width={screenWidth}
-                height={256}
-                verticalLabelRotation={30}
-                chartConfig={chartConfig}
-                bezier
-                />
-            <PieChart
-                data={data1}
-                width={screenWidth}
-                height={220}
-                chartConfig={chartConfig}
-                accessor={"population"}
-                backgroundColor={"transparent"}
-                paddingLeft={"15"}
-                center={[10, 50]}
-                absolute
-                />
-            <BarChart
-                // style={graphStyle}
-                data={data3}
-                width={screenWidth}
-                height={220}
-                yAxisLabel="$"
-                chartConfig={chartConfig}
-                verticalLabelRotation={30}
-                />
-            <ContributionGraph
-                values={commitsData}
-                endDate={new Date("2017-04-01")}
-                numDays={105}
-                width={screenWidth}
-                height={220}
-                chartConfig={chartConfig}
-                />
-        </View>
 
-        </ScrollView>
+
+      useEffect(() => {
+
+        const user = auth.currentUser;
+        console.log(user.uid);      // prints the user's unique ID
+        console.log(user.email);    // prints the user's email address
+
+   
+    }, []);
+
+    return(
+
+      <ScrollView>
+      <View style={styles.container}>
+          {/* <Text>Bezier Line Chart</Text> */}
+          <View style={styles.card}>
+              <PieChart
+                  data={data1}
+                  width={screenWidth}
+                  height={200}
+                  chartConfig={chartConfig}
+                  accessor={"population"}
+                  backgroundColor={"transparent"}
+                  paddingLeft={"0"}
+                  absolute={false}
+              />
+          </View>
+          <View style={styles.card}>
+          <LineChart
+                data={data}
+                width={screenWidth-40}
+                height={200}
+                chartConfig={chartConfig}
+                />
+          </View>
+      </View>
+  </ScrollView>
+
         
     );
 
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 10,
+  },
+  card: {
+    backgroundColor: '#18d10a',
+    borderRadius: 15,
+    padding: 10,
+    elevation: 1,
+    marginTop:5
+  },
+});
