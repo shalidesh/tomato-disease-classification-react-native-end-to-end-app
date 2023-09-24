@@ -9,10 +9,26 @@ import {
     ContributionGraph,
     StackedBarChart
   } from "react-native-chart-kit";
-import { auth } from "../config/firebase";
+
+import {
+  collection,
+  addDoc,
+  orderBy,
+  where,
+  query,
+  onSnapshot
+} from 'firebase/firestore';
+
+import { signOut } from 'firebase/auth';
+import { auth, database } from '../config/firebase';
+
 
 export default function Dashboard() {
 
+    // Array of colors for the pie chart
+    const colors = ["rgba(131, 167, 234, 1)", "#F00", "#red", "#ffffff", "rgb(0, 0, 255)", "#0FF"];
+
+    const [data1, setData1] = useState([]);
 
     const screenWidth = Dimensions.get("window").width;
 
@@ -27,45 +43,6 @@ export default function Dashboard() {
         ],
         legend: ["Rainy Days"] // optional
       };
-
-
-      const data1 = [
-        {
-          name: "Seoul",
-          population: 21500,
-          color: "rgba(131, 167, 234, 1)",
-          legendFontColor: "#000000",
-          legendFontSize: 10
-        },
-        {
-          name: "Toronto",
-          population: 2800,
-          color: "#F00",
-          legendFontColor: "#000000",
-          legendFontSize: 10
-        },
-        {
-          name: "Beijing",
-          population: 5276,
-          color: "red",
-          legendFontColor: "#000000",
-          legendFontSize: 10
-        },
-        {
-          name: "New York",
-          population: 8538,
-          color: "#ffffff",
-          legendFontColor: "#000000",
-          legendFontSize: 10
-        },
-        {
-          name: "Moscow",
-          population: 11920,
-          color: "rgb(0, 0, 255)",
-          legendFontColor: "#000000",
-          legendFontSize: 10
-        }
-      ];
 
       const data3 = {
         labels: ["January", "February", "March", "April", "May", "June"],
@@ -101,17 +78,59 @@ export default function Dashboard() {
         useShadowColorFromDataset: false // optional
       };
 
-
-
       useEffect(() => {
-
         const user = auth.currentUser;
-        console.log(user.uid);      // prints the user's unique ID
-        console.log(user.email);    // prints the user's email address
+        console.log(user.email);
+        if (user) {
+            console.log("user exist");
+            fetchDetections(user.uid);
+          }
+      }, []);
+    
+      function fetchDetections(userId) {
+        console.log("user exist", {userId});
+        console.log(userId);
+    
+        const collectionRef = collection(database, 'Detections');
+        const q = query(collectionRef, where('userId', '==', userId));
+        
+        let diseaseCounts = {};
+    
+        const unsubscribe = onSnapshot(q, querySnapshot => {
+            querySnapshot.docs.map(doc => {
+                let record = doc.data();
+                console.log("Record: ", record);
+    
+                // Increment the count for this diseaseClass
+                if (record.diseaseClass in diseaseCounts) {
+                    diseaseCounts[record.diseaseClass]++;
+                } else {
+                    diseaseCounts[record.diseaseClass] = 1;
+                }
+            }); 
+    
+            // Log the counts
+            console.log("Disease Counts: ", diseaseCounts);
 
-   
-    }, []);
+            // Update data1 based on diseaseCounts
+            const newData1 = Object.keys(diseaseCounts).map((diseaseClass, index) => ({
+                name: diseaseClass,
+                population: diseaseCounts[diseaseClass],
+                color: colors[index % colors.length], // Use a color from the array
+                legendFontColor: "#000000",
+                legendFontSize: 10
+            }));
 
+            setData1(newData1);
+
+            console.log("Data for Pie Chart: ", newData1);
+        });
+    
+        // Cleanup function to unsubscribe from listener
+        return () => unsubscribe();
+    }
+    
+    
     return(
 
       <ScrollView>
