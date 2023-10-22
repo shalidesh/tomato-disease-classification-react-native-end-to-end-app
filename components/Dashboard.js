@@ -1,6 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View ,Dimensions,ScrollView} from 'react-native';
+import React, { useState, useEffect ,useCallback} from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { StyleSheet, Text, View ,Dimensions,ScrollView,TouchableOpacity } from 'react-native';
+import { Icon } from 'react-native-elements';
 import {
     LineChart,
     BarChart,
@@ -25,10 +27,13 @@ import { auth, database } from '../config/firebase';
 
 export default function Dashboard() {
 
+
+
     // Array of colors for the pie chart
     const colors = ["rgba(131, 167, 234, 1)", "#F00", "yellow", "#ffffff", "rgb(0, 0, 255)", "#0FF"];
 
     const [data1, setData1] = useState([]);
+
     const [bacterial_spot, Setbacterial_spot] = useState(0);
     const [early_blight, Setearly_blight] = useState(0);
     const [late_blight, Setlate_blight] = useState(0);
@@ -38,6 +43,25 @@ export default function Dashboard() {
     const [spider_mites, Setspider_mites] = useState(0);
     const [target_spot, Settarget_spot] = useState(0);
     const [yellow_leaf_curl, Setyellow_leaf_curl] = useState(0);
+
+    useFocusEffect(
+      React.useCallback(() => {
+
+        console.log("screen come to play");
+        const user = auth.currentUser;
+
+        fetchDetections(user.uid);
+        // Your code here - this will run only when the screen is in focus
+    
+        return () => {
+
+          console.log("screen go out");
+          // Your cleanup code here - this will run when the screen goes out of focus
+        };
+      }, [])
+    );
+
+    const [user,SetUser]=useState(null)
 
     const screenWidth = Dimensions.get("window").width;
 
@@ -87,49 +111,37 @@ export default function Dashboard() {
         useShadowColorFromDataset: false // optional
       };
 
-      useEffect(() => {
-        const user = auth.currentUser;
-        console.log(user.email);
-        if (user) {
-            console.log("user exist");
-            fetchDetections(user.uid);
-          }
-      }, []);
+      async function fetchDetections() {
 
-      // Helper function to get month name from month number
-      function getMonthName(monthNumber) {
-        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        return monthNames[monthNumber - 1];
-      }
-    
-      function fetchDetections(userId) {
-        console.log("user exist", {userId});
-        console.log(userId);
+        const user = auth.currentUser;
+        console.log("user exist", {user});
+        
     
         const collectionRef = collection(database, 'Detections');
-        const q = query(collectionRef, where('userId', '==', userId));
+        const q = query(collectionRef, where('userId', '==', user.uid));
         
         let diseaseCounts = {};
         let recordCountsByMonth = {};
     
         const unsubscribe = onSnapshot(q, querySnapshot => {
             querySnapshot.docs.map(doc => {
+              console.log("database reading start--------------------------------");
                 let record = doc.data();
-                console.log("Record: ", record);
+                console.log("Record is: ", record);
 
-                // Convert timestamp to Date object
-                let timestampInSeconds = record.timestamp.seconds;
-                let date = new Date(timestampInSeconds * 1000);
+               // Convert timestamp to Date object
+                //let timestampInSeconds = record.timestamp.seconds;
+                //let date = new Date(timestampInSeconds * 1000);
 
                 // Get the month (0-based index, so we add 1 to get a human-readable month number)
-                let month = date.getMonth() + 1;
+                //let month = date.getMonth() + 1;
 
                 // Increment the count for this month
-                if (month in recordCountsByMonth) {
-                    recordCountsByMonth[month]++;
-                } else {
-                    recordCountsByMonth[month] = 1;
-                }
+                // if (month in recordCountsByMonth) {
+                //     recordCountsByMonth[month]++;
+                // } else {
+                //     recordCountsByMonth[month] = 1;
+                // }
     
                 // Increment the count for this diseaseClass
                 if (record.diseaseClass in diseaseCounts) {
@@ -142,39 +154,39 @@ export default function Dashboard() {
             // Log the counts
             console.log("Disease Counts: ", diseaseCounts);
             // Log the counts
-            console.log("Record Counts By Month: ", recordCountsByMonth);
+            // console.log("Record Counts By Month: ", recordCountsByMonth);
 
              // Create labels and data arrays
-            let labels = [];
-            let data = [];
-            for (let i = 1; i <= 12; i++) {
-                labels.push(getMonthName(i));
-                data.push(recordCountsByMonth[i] || 0);
-            }
+            // let labels = [];
+            // let data = [];
+            // for (let i = 1; i <= 12; i++) {
+            //     labels.push(getMonthName(i));
+            //     data.push(recordCountsByMonth[i] || 0);
+            // }
 
             // Update state
-            setData({
-              labels: labels,
-              datasets: [
-                {
-                  data: data,
-                  color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`,
-                  strokeWidth: 3
-                }
-              ],
-              legend: ["Total Unhealthy Plants"]
-            });
+            // setData({
+            //   labels: labels,
+            //   datasets: [
+            //     {
+            //       data: data,
+            //       color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`,
+            //       strokeWidth: 3
+            //     }
+            //   ],
+            //   legend: ["Total Unhealthy Plants"]
+            // });
 
            
-            Setlate_blight(diseaseCounts["Late Blight"] || 0)
-            Setbacterial_spot(diseaseCounts["Bacterial Spot"] || 0)
-            Setearly_blight(diseaseCounts["Early Blight"] || 0)
-            Setleaf_mold(diseaseCounts["Leaf Mold"] || 0)
-            Setmosaic_virus(diseaseCounts["Mosaic Virus"] || 0)
-            Setseptoria_leaf_spot(diseaseCounts["Septoria Leaf Spot"] || 0)
-            Setspider_mites(diseaseCounts["Spider Mites"] || 0)
-            Settarget_spot(diseaseCounts["Target Spot"] || 0)
-            Setyellow_leaf_curl(diseaseCounts["Yellow Leaf Curl"] || 0)
+            Setlate_blight(diseaseCounts["Tomato_Late_blight"] || 0)
+            Setbacterial_spot(diseaseCounts["Tomato_Bacterial_spot"] || 0)
+            Setearly_blight(diseaseCounts["Tomato_Early_blight"] || 0)
+            Setleaf_mold(diseaseCounts["Tomato_Leaf_Mold"] || 0)
+            Setmosaic_virus(diseaseCounts["Tomato__Tomato_mosaic_virus"] || 0)
+            Setseptoria_leaf_spot(diseaseCounts["Tomato_Septoria_leaf_spot"] || 0)
+            Setspider_mites(diseaseCounts["Tomato_Spider_mites_Two_spotted_spider_mite"] || 0)
+            Settarget_spot(diseaseCounts["Tomato__Target_Spot"] || 0)
+            Setyellow_leaf_curl(diseaseCounts["Tomato__Tomato_YellowLeaf__Curl_Virus"] || 0)
 
             // Update data1 based on diseaseCounts
             const newData1 = Object.keys(diseaseCounts).map((diseaseClass, index) => ({
@@ -182,20 +194,32 @@ export default function Dashboard() {
                 population: diseaseCounts[diseaseClass],
                 color: colors[index % colors.length], // Use a color from the array
                 legendFontColor: "#000000",
-                legendFontSize: 10
+                legendFontSize: 7
             }));
 
             setData1(newData1);
 
             console.log("Data for Pie Chart: ", newData1);
         });
+
+        console.log("database reading finished-----------------------------");
     
         // Cleanup function to unsubscribe from listener
         return () => unsubscribe();
     }
+
+      // Helper function to get month name from month number
+      function getMonthName(monthNumber) {
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        return monthNames[monthNumber - 1];
+      }
+    
+     
     
     
     return(
+
+      <>
 
 <ScrollView>
     <View style={styles.container}>
@@ -245,7 +269,7 @@ export default function Dashboard() {
         </View>
       </View>
       <View style={styles.titleCard}>
-        <Text style={styles.titleText}>Pie Chart</Text>
+        <Text style={styles.titleText}>Diseases Disribution</Text>
       </View>
       <View style={styles.card}>
         <PieChart
@@ -259,19 +283,46 @@ export default function Dashboard() {
           absolute={false}
         />
       </View>
-      <View style={styles.titleCard}>
+      {/* <View style={styles.titleCard}>
         <Text style={styles.titleText}>Line Chart</Text>
-      </View>
-      <View style={styles.card}>
+      </View> */}
+      {/* <View style={styles.card}>
         <LineChart
           data={data}
           width={screenWidth-30}
           height={200}
           chartConfig={chartConfig}
         />
-      </View>
+      </View> */}
     </View>
+    
   </ScrollView>
+
+  <TouchableOpacity
+      style={{
+        borderWidth:1,
+        borderColor:'rgba(0,0,0,0.2)',
+        alignItems:'center',
+        justifyContent:'center',
+        width:70,
+        position: 'absolute',                                          
+        bottom: 10,                                                    
+        right: 10,
+        height:70,
+        backgroundColor:'#18d10a',
+        borderRadius:100,
+      }}
+      onPress={() => {
+        console.log("Chat Icon Pressed");
+        
+      }}
+    >
+      <Icon name={"chat"} size={30} color="#030303" />
+    </TouchableOpacity>
+
+  </>
+
+  
 
         
     );

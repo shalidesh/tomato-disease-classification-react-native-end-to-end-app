@@ -1,5 +1,6 @@
 
-import React, {useState} from 'react';
+import React, {useState,useEffect} from 'react';
+import { Alert } from 'react-native';
 import {
   SafeAreaView,
   Image,
@@ -13,6 +14,20 @@ import {
   TouchableOpacity,
   ImageBackground, 
 } from 'react-native';
+
+
+import {
+  collection,
+  addDoc,
+  orderBy,
+  serverTimestamp,
+  where,
+  query,
+  onSnapshot
+} from 'firebase/firestore';
+
+import { signOut } from 'firebase/auth';
+import { auth, database } from '../config/firebase';
 
 import CameraImage from "../assets/camera.png";
 import Gallery from "../assets/gallery.png";
@@ -61,6 +76,18 @@ export default function CameraPage() {
     const [type, setType] = useState(Camera.Constants.Type.back);
     const [cameraRef, setCameraRef] = useState(null);
 
+    const [user, setUser] = useState('');
+
+
+    useEffect(() => {
+      const user = auth.currentUser;
+      console.log(user.email);
+      if (user) {
+          console.log("user exist");
+          setUser(user.uid);
+        }
+    }, []);
+
     const backgroundStyle = {
         backgroundColor: isDarkMode ? '#0c1a30' : '#0c1a30',
     };
@@ -90,6 +117,18 @@ export default function CameraPage() {
     setImage('');
   };
 
+  const addDetection = async (diseaseClass) => {
+    try {
+      await addDoc(collection(database, 'Detections'), {
+        diseaseClass: diseaseClass,
+        timestamp: serverTimestamp(),
+        userId: user,
+      });
+      console.log('Detection added!');
+    } catch (error) {
+      console.error("Error adding detection: ", error);
+    }
+  };
     
     const getResult = async (path, response) => {
       setImage(path);
@@ -114,6 +153,22 @@ export default function CameraPage() {
             console.log(data);
             setLabel(data.class);
             setResult(data.confidence);
+            setTimeout(() => {
+              Alert.alert(
+                'Add To The Database',
+                'Do you Want to add this record to the Database?',
+                [
+                  {
+                    text: 'Cancel',
+                    onPress: () => console.log('Cancel Pressed'),
+                    style: 'cancel',
+                  },
+                  { text: 'OK', onPress: () => addDetection(data.class) },
+                ],
+                { cancelable: false }
+              );
+            }, 3000);
+            
         })
         .catch(error => {
             console.log('Error:', error);
@@ -248,7 +303,7 @@ const styles = StyleSheet.create({
     },
     space: {marginVertical: 0, marginHorizontal: 10},
     labelText: {color: '#FFF', fontSize: 20, },
-    resultText: {fontSize: 32, },
+    resultText: {fontSize: 15, },
     imageIcon: {height: 60, width: 60},
     emptyText: {
       position: 'absolute',
