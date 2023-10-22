@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View ,Image,Alert} from "react-native";
+import { StyleSheet, Text, View ,Image,Alert,TouchableOpacity} from "react-native";
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { createStackNavigator, TransitionPresets } from '@react-navigation/stack';
@@ -13,6 +13,7 @@ import { DrawerItemList, createDrawerNavigator } from "@react-navigation/drawer"
 import CameraPage from "./Camera";
 import User from "../assets/user3.jpg"
 import Dashboard from "./Dashboard";
+import Settings from "./Settings";
 
 import { signOut } from 'firebase/auth';
 import { auth, database } from '../config/firebase';
@@ -21,10 +22,9 @@ const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
 
 
-export default function Home() {
+export default function Home({ navigation }) {
 
   const [user, setUser] = useState("");
-
 
   useEffect(() => {
 
@@ -59,6 +59,13 @@ export default function Home() {
   // Dummy screen component
   function LogoutScreen() {
     return <View />;
+  }
+
+  function handleNavigation(screenName) {
+    navigation.reset({
+      index: 0,
+      routes: [{ name: screenName }],
+    });
   }
 
 
@@ -123,27 +130,49 @@ export default function Home() {
           }
         }}
       >
-        <Drawer.Screen
-          name="Dashboard"
-          options={{
-            drawerLabel: "Dashboard",
-            title: "Dashboard",
-            drawerIcon: () => (
-              <SimpleLineIcons name="home" size={20} color="#808080" />
-            )
-          }}
-          component={Dashboard}
-        />
+        
         <Drawer.Screen
           name="Camera"
           options={{
             drawerLabel: "Camera",
             title: "Camera",
             drawerIcon: () => (
-              <SimpleLineIcons name="home" size={20} color="#808080" />
-            )
+              <TouchableOpacity onPress={() => handleNavigation('Camera')}>
+                <SimpleLineIcons name="home" size={20} color="#808080" />
+              </TouchableOpacity>
+            ),
           }}
           component={CameraPage}
+        />
+         
+        <Drawer.Screen
+          name="Settings"
+          options={{
+            drawerLabel: "Settings",
+            title: "Settings",
+            drawerIcon: () => (
+              <TouchableOpacity onPress={() => handleNavigation('Settings')}>
+                <SimpleLineIcons name="home" size={20} color="#808080" />
+              </TouchableOpacity>
+
+              
+            )
+          }}
+          component={Settings}
+        />
+        <Drawer.Screen
+          name="Dashboard"
+          options={{
+            drawerLabel: "Dashboard",
+            title: "Dashboard",
+            drawerIcon: () => (
+              <TouchableOpacity onPress={() => handleNavigation('Dashboard')}>
+                <SimpleLineIcons name="home" size={20} color="#808080" />
+              </TouchableOpacity>
+              
+            )
+          }}
+          component={Dashboard}
         />
 
       <Drawer.Screen
@@ -153,7 +182,10 @@ export default function Home() {
             drawerLabel: "Logout",
             title: "Logout",
             drawerIcon: () => (
-              <SimpleLineIcons name="logout" size={20} color="#808080" />
+              <TouchableOpacity>
+                 <SimpleLineIcons name="logout" size={20} color="#808080" />
+              </TouchableOpacity>
+             
             )
           }}
           listeners={{
